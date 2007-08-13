@@ -58,13 +58,15 @@ def create_lyrics_view():
     vbox.pack_start(sw, expand=True)
     return (vbox, view.get_buffer())
 
-class LyricWindow(gtk.Window):
-    def __init__(self, db, parent, entry):
+class TTPLyricWindow(gtk.Window):
+    def __init__(self, parent):
         gtk.Window.__init__(self)
+	
+	self.lyrics_grabber = TTPLyricGrabber()
+	
         self.set_border_width(12)
 	self.set_transient_for(parent)
 
-	self.db = db
 	self.set_title(_('ttplyrics by sevenever'))
 
 	close = gtk.Button(stock=gtk.STOCK_CLOSE)
@@ -78,60 +80,19 @@ class LyricWindow(gtk.Window):
         lyrics_view.pack_start(bbox, expand=False)
 	
         self.add(lyrics_view)
-        self.set_default_size(400, 300)
+        self.set_default_size(400, 600)
         self.show_all()
 
-    def show_lyrics(entry):
+    def show_lyrics(self, entry, shell):
+	db = shell.props.db
 	title = db.entry_get(entry, rhythmdb.PROP_TITLE)
 	artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         self.set_title(title + " - " + artist + " - Lyrics")
 	
         self.buffer.set_text(_("Searching for lyrics..."))
+	self.lyrics_grabber.get_lyrics(db, entry, self.buffer.set_text)
 
-
-class TTLyricPane(object):
-    def __init__(self, db, song_info):
-    	(self.view, self.buffer) = create_lyrics_view()
-	self.view.show_all()
-	self.page_num = song_info.append_page(_("Lyrics"), self.view)
-	self.db = db
-	self.song_info = song_info
-	self.have_lyrics = 0
-	self.visible = 0
-        self.entry = self.song_info.get_property("current-entry")
-
-	self.entry_change_id = song_info.connect('notify::current-entry', self.entry_changed)
-	nb = self.view.get_parent()
-	self.switch_page_id = nb.connect('switch-page', self.switch_page_cb)
-
-    def entry_changed(self, pspec, duh):
-        self.entry = self.song_info.get_property("current-entry")
-	self.have_lyrics = 0
-	if self.visible != 0:
-	    self.get_lyrics()
-
-    def switch_page_cb(self, notebook, page, page_num):
-        if self.have_lyrics != 0:
-	    return
-
-        if page_num != self.page_num:
-	    self.visible = 0
-	    return
-
-	self.visible = 1
-	self.get_lyrics()
-
-    def get_lyrics(self):
-        if self.entry is None:
-	    return
-
-	self.buffer.set_text(_("Searching for lyrics..."));
-	lyrics_grabber = TTLyricGrabber()
-	lyrics_grabber.get_lyrics(self.db, self.entry, self.buffer.set_text)
-
-
-
-class TTLyricGrabber(object):
+class TTPLyricGrabber(object):
     def __init__(self):
     	self.loader = rb.Loader ()
 
@@ -233,7 +194,7 @@ class TTLyricGrabber(object):
 	self.callback(text)
 
 
-class TTLyricsDisplayPlugin(rb.Plugin):
+class TTPLyricsDisplayPlugin(rb.Plugin):
 
     def __init__ (self):
 	rb.Plugin.__init__ (self)
@@ -243,7 +204,7 @@ class TTLyricsDisplayPlugin(rb.Plugin):
 	self.action = gtk.Action ('TTPLyrics', _('_TTPLyrics'),
 				  _('View lyrics from ttplayer <http://www.ttplayer.com>'),
 				  'rb-song-lyrics')
-	self.activate_id = self.action.connect ('activate', self.show_song_lyrics, shell)
+	self.activate_id = self.action.connect ('activate', self.show_lyrics_window, shell)
 
 	self.action_group = gtk.ActionGroup ('TTPLyricsPluginActions')
 	self.action_group.add_action (self.action)
@@ -254,10 +215,8 @@ class TTLyricsDisplayPlugin(rb.Plugin):
 	uim.ensure_update ()
 
 	sp = shell.get_player ()
-	self.pec_id = sp.connect('playing-song-changed', self.playing_entry_changed)
-	self.playing_entry_changed (sp, sp.get_playing_entry ())
-
-	self.csi_id = shell.connect('create_song_info', self.create_song_info)
+	self.pec_id = sp.connect('playing-song-changed', self.playing_entry_changed, shell)
+	self.playing_entry_changed (sp, sp.get_playing_entry (), shell)
 
     def deactivate (self, shell):
 
@@ -268,38 +227,32 @@ class TTLyricsDisplayPlugin(rb.Plugin):
 	self.action_group = None
 	self.action = None
 
-	shell.disconnect (self.csi_id)
-
 	sp = shell.get_player ()
 	sp.disconnect (self.pec_id)
 	
 	if self.window is not None:
 	    self.window.destroy ()
 	
-    def playing_entry_changed (self, sp, entry):
+    def playing_entry_changed (self, sp, entry, shell):
     	if entry is not None:
-	    self.action.set_sensitive (True)
-	else:
-	    self.action.set_sensitive (False)
+	    self.show_song_lyrics(None, shell)
 
+    def show_lyrics_window(self, action, shell):
+	self.window = TTPLyricWindow(shell.props.window)
+	self.window.show_all()
+	sp = shell.get_player ()
+	entry = sp.get_playing_entry ()
+	self.playing_entry_changed(sp, entry, shell)
+    
     def show_song_lyrics (self, action, shell):
-
-	if self.window is not None:
-	    self.window.destroy ()
-
-	db = shell.get_property ("db")
 	sp = shell.get_player ()
 	entry = sp.get_playing_entry ()
 
 	if entry is None:
 	    return
+	
+	if self.window is None:
+	    return
 
-	self.window = LyricWindow(db, shell.get_property ("window"), entry)
-	lyrics_grabber = TTLyricGrabber()
-	lyrics_grabber.get_lyrics(db, entry, self.window.buffer.set_text)
-
-    def create_song_info (self, shell, song_info, is_multiple):
-
-	if is_multiple is False:
-	    x = TTLyricPane(shell.get_property ("db"), song_info)
+	self.window.show_lyrics(entry, shell)
 
