@@ -42,6 +42,7 @@ LYRIC_TITLE_STRIP=["\(live[^\)]*\)", "\(acoustic[^\)]*\)", "\([^\)]*mix\)", "\([
 LYRIC_TITLE_REPLACE=[("/", "-"), (" & ", " and ")]
 LYRIC_ARTIST_REPLACE=[("/", "-"), (" & ", " and ")]
 
+MAX_RETRY = 5
 
 def create_lyrics_view():
     view = gtk.TextView()
@@ -168,14 +169,21 @@ class TTLyricGrabber(object):
             return;
 
 	callback('Get Lyrics list on TTplayer lyrics server...')
-	theurl = 'http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?Artist=%s&Title=%s&Flags=0' % (ttpClient.EncodeArtTit(artist.replace(' ','').lower()), ttpClient.EncodeArtTit(title.replace(' ','').lower()))
-	self.loader.get_url(theurl, self.search_results)
+	self.theurl = 'http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?Artist=%s&Title=%s&Flags=0' % (ttpClient.EncodeArtTit(artist.replace(' ','').lower()), ttpClient.EncodeArtTit(title.replace(' ','').lower()))
+	self.retry = 1
+	self.loader.get_url(self.theurl, self.search_results)
 	
 
     def search_results(self, data):
     	if data is None:
-	    self.callback("Server did not respond.")
-	    return
+	    if self.retry < MAX_RETRY:
+		self.retry += 1
+		self.callback(str(self.retry) + 'th retry...')
+		self.loader.get_url(self.theurl, self.search_results)		
+		return
+	    else:
+		self.callback("Server did not respond.")
+		return
 
 	try:
 	    dom1=minidom.parseString(data)
@@ -192,15 +200,21 @@ class TTLyricGrabber(object):
 	    return
 	Id,artist,title = li[0]
 	
-	theurl = 'http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?Id=%d&Code=%d&uid=01&mac=%012x' % (int(Id),ttpClient.CodeFunc(int(Id), (artist + title).encode('UTF8')), random.randint(0,0xFFFFFFFFFFFF))
+	self.theurl = 'http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?Id=%d&Code=%d&uid=01&mac=%012x' % (int(Id),ttpClient.CodeFunc(int(Id), (artist + title).encode('UTF8')), random.randint(0,0xFFFFFFFFFFFF))
 	
-	self.loader.get_url(theurl, self.lyrics)
+	self.loader.get_url(self.theurl, self.lyrics)
 
 
     def lyrics(self, data):
         if data is None:
-	    self.callback("Error occored while fetch lyrics content")
-	    return
+	    if self.retry < MAX_RETRY:
+		self.retry += 1
+		self.callback((self.retry) + 'th retry...')
+		self.loader.get_url(self.theurl, self.lyrics)		
+		return
+	    else:
+		self.callback("Error occored while fetch lyrics content")
+		return
 	
 	text = data
 	text += "\n\n"+_("Lyrics provided by www.ttplayer.com")
@@ -225,7 +239,7 @@ class TTLyricsDisplayPlugin(rb.Plugin):
 				  'rb-song-lyrics')
 	self.activate_id = self.action.connect ('activate', self.show_song_lyrics, shell)
 
-	self.action_group = gtk.ActionGroup ('SongLyricsPluginActions')
+	self.action_group = gtk.ActionGroup ('TTPLyricsPluginActions')
 	self.action_group.add_action (self.action)
 
     	uim = shell.get_ui_manager ()
@@ -252,11 +266,10 @@ class TTLyricsDisplayPlugin(rb.Plugin):
 
 	sp = shell.get_player ()
 	sp.disconnect (self.pec_id)
-
+	
 	if self.window is not None:
 	    self.window.destroy ()
-
-
+	
     def playing_entry_changed (self, sp, entry):
     	if entry is not None:
 	    self.action.set_sensitive (True)

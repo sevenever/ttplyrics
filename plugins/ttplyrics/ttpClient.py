@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- Mode: python; coding: utf-8; tab-width: 8; indent-tabs-mode: t; -*- 
 #
 # Copyright 2007 Sevenever
