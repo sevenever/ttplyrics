@@ -64,9 +64,8 @@ class LyricWindow(gtk.Window):
         self.set_border_width(12)
 	self.set_transient_for(parent)
 
-	title = db.entry_get(entry, rhythmdb.PROP_TITLE)
-	artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
-        self.set_title(title + " - " + artist + " - Lyrics")
+	self.db = db
+	self.set_title(_('ttplyrics by sevenever'))
 
 	close = gtk.Button(stock=gtk.STOCK_CLOSE)
 	close.connect('clicked', lambda w: self.destroy())
@@ -77,11 +76,18 @@ class LyricWindow(gtk.Window):
         bbox.set_layout(gtk.BUTTONBOX_END)
         bbox.pack_start(close)
         lyrics_view.pack_start(bbox, expand=False)
-
-        self.buffer.set_text(_("Searching for lyrics..."))
+	
         self.add(lyrics_view)
         self.set_default_size(400, 300)
         self.show_all()
+
+    def show_lyrics(entry):
+	title = db.entry_get(entry, rhythmdb.PROP_TITLE)
+	artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
+        self.set_title(title + " - " + artist + " - Lyrics")
+	
+        self.buffer.set_text(_("Searching for lyrics..."))
+
 
 class TTLyricPane(object):
     def __init__(self, db, song_info):
