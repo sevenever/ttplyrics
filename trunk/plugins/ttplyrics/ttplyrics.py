@@ -26,6 +26,7 @@ import rb
 import rhythmdb
 from ttpClient import ttpClient
 import random
+import locale
 
 ui_str = """
 <ui>
@@ -101,11 +102,11 @@ class TTPLyricGrabber(object):
         if not os.path.exists (lyrics_folder):
             os.mkdir (lyrics_folder)
 
-	artist_folder = lyrics_folder + '/' + artist[:128]
+	artist_folder = lyrics_folder + '/' + artist[:128].encode(locale.getdefaultlocale()[1])
 	if not os.path.exists (artist_folder):
 	    os.mkdir (artist_folder)
 
-	return artist_folder + '/' + title[:128] + '.lyric'
+	return artist_folder + '/' + title[:128].encode(locale.getdefaultlocale()[1]) + '.lyric'
 
     def get_lyrics(self, db, entry, callback):
 	self.callback = callback
