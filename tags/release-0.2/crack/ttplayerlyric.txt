@@ -1,0 +1,87 @@
+获取歌词服务器列表
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?svrlst&uid=01&mac=001478264911
+<ttp_lrcsvr query_url="http://lrcct2.ttplayer.com/dll/lyricsvr.dll?svrlst">
+	<server name="歌词服务器(电信)" url="http://lrcct2.ttplayer.com/dll/lyricsvr.dll" />
+	<server name="歌词服务器(网通)" url="http://lrccnc.ttplayer.com/dll/lyricsvr.dll" />
+	<extra title="点击此处帮你找到歌词" url="http://www.ttplayer.com/geci/download.php" />
+</ttp_lrcsvr>
+
+**********************************************************************************************************************
+
+Ai Otsuka
+Planetarium
+
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?Artist=610069006F007400730075006B006100&Title=70006C0061006E006500740061007200690075006D00&Flags=0
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?Artist=6100690020006f007400730075006b0061&Title=70006c0061006e006500740061007200690075006d&Flags=0
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?
+Artist=610069006F007400730075006B006100										----艺术家 可能Unicode16编码
+&Title=70006C0061006E006500740061007200690075006D00							----歌名 可能Unicode16编码
+&Flags=0																	----未知
+
+
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<result>
+	<lrc id="127694" artist="大塚爱" title="PLANETARIUM"></lrc>						----一个匹配一条记录 id为歌词id
+</result>
+
+
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?Id=127694&Code=-1363687804&uid=01&mac=001478264911
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?
+Id=127694																----id为上次调用返回的歌词id
+&Code=-1363687804															----可能通过某种加密算法后的Code??????????????????????????
+																		     (可能是)
+&uid=01																	----固定为01(??)
+&mac=001478264911														----本机的mac地址，可能用于上面Code的计算，服务器需要此值验证
+
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?Id=105402&Code=-903531896&uid=01&mac=001478264911
+Id=105402
+Code=-903531896
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?Id=105402&Code=-903531896&uid=01&mac=001478264911
+Id=89880
+Code=-760311526
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?Id=73918&Code=2016822932&uid=01&mac=001478264911
+Id=73918
+Code=2016822932
+**********************************************************************************************************************
+The Beatles
+Yesterday
+
+
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?Artist=74006800650062006500610074006C0065007300&Title=790065007300740065007200640061007900&Flags=0
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?
+Artist=74006800650062006500610074006C0065007300
+&Title=790065007300740065007200640061007900&Flags=0
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<result>
+	<lrc id="51441" artist="The Beatles" title="Yesterday"></lrc>
+</result>
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?dl?Id=51441&Code=-278805504&uid=01&mac=001478264911
+
+
+**********************************************************************************************************************
+Code List
+127694	-1363687804	01	001478264911
+51441	-278805504	01	001478264911
+39166	-1265573295	01	001478264911
+45287	1736951164	01	001478264911
+169254	948223073	01	001478264911
+129533	349286624	01	001478264911
+123358	691426801	01	001478264911
+88449	-151988655	01	001478264911
+108988	-354546850	01	001478264911
+154712	-83490238	01	001478264911
+59761	-1707125416	01	001478264911
+12398	338307549	01	001478264911
+179358	-1235286452	01	001478264911
+140265	-1460659310	01	001478264911
+
+
+
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?Artist=3f9651&Title=ce917e7608545f4e0967256629&Flags=0
+http://lrcct2.ttplayer.com/dll/lyricsvr.dll?sh?Artist=3f965168&Title=ce917e7608545f4e096725662959&Flags=0
+
+
+667A9400
