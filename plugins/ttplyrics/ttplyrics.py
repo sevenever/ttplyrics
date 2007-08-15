@@ -45,53 +45,87 @@ LYRIC_ARTIST_REPLACE=[("/", "-"), (" & ", " and ")]
 
 MAX_RETRY = 5
 
-def create_lyrics_view():
-    view = gtk.TextView()
-    view.set_wrap_mode(gtk.WRAP_WORD)
-    view.set_editable(False)
-
-    sw = gtk.ScrolledWindow()
-    sw.add(view)
-    sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-    sw.set_shadow_type(gtk.SHADOW_IN)
-
-    vbox = gtk.VBox(spacing=12)
-    vbox.pack_start(sw, expand=True)
-    return (vbox, view.get_buffer())
-
 class TTPLyricWindow(gtk.Window):
     def __init__(self, parent):
         gtk.Window.__init__(self)
 	
 	self.lyrics_grabber = TTPLyricGrabber()
-	
-        self.set_border_width(12)
-	self.set_transient_for(parent)
 
-	self.set_title(_('ttplyrics by sevenever'))
-
-	close = gtk.Button(stock=gtk.STOCK_CLOSE)
-	close.connect('clicked', lambda w: self.destroy())
-
-	(lyrics_view, buffer) = create_lyrics_view()
-	self.buffer = buffer
-        bbox = gtk.HButtonBox()
-        bbox.set_layout(gtk.BUTTONBOX_END)
-        bbox.pack_start(close)
-        lyrics_view.pack_start(bbox, expand=False)
-	
-        self.add(lyrics_view)
-        self.set_default_size(400, 600)
+	self.create_UI(parent)
         self.show_all()
 
+    def create_UI(self, parent):
+        self.set_border_width(12)
+	self.set_transient_for(parent)
+	self.set_title(_('ttplyrics by sevenever'))
+
+	#create widget
+	view = gtk.TextView()
+	view.set_wrap_mode(gtk.WRAP_WORD)
+	view.set_editable(False)
+	self.buffer = view.get_buffer()
+
+	sw = gtk.ScrolledWindow()
+	sw.add(view)
+	sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+	sw.set_shadow_type(gtk.SHADOW_IN)
+
+	lblArtist = gtk.Label(_('Artist'))
+	self.txtArtist = gtk.Entry()
+	self.txtArtist.set_width_chars(30)
+	lblTitle = gtk.Label(_('Title'))
+	self.txtTitle = gtk.Entry()
+	self.txtTitle.set_width_chars(30)
+
+	btnSearch = gtk.Button(label=_('Search'), stock=gtk.STOCK_FIND_AND_REPLACE)
+	btnSearch.connect('clicked', self.search_lyrics)
+
+	btnClose = gtk.Button(stock=gtk.STOCK_CLOSE)
+	btnClose.connect('clicked', lambda w: self.destroy())
+
+        #packing all
+	vbox = gtk.VBox(spacing=12)
+	vbox.pack_start(sw, expand=True)
+	
+        bbox = gtk.HBox()
+        #bbox.set_layout(gtk.BUTTONBOX_END)
+	bbox.pack_start(lblArtist, expand=False)
+	bbox.pack_start(self.txtArtist, expand=False)
+	bbox.pack_end(btnSearch, expand=False)
+        vbox.pack_start(bbox, expand=False)
+	
+	bbox1 = gtk.HBox()
+        #bbox.set_layout(gtk.BUTTONBOX_END)
+	bbox1.pack_start(lblTitle, expand=False)
+	bbox1.pack_start(self.txtTitle, expand=False)
+        bbox1.pack_end(btnClose, expand=False)
+        vbox.pack_start(bbox1, expand=False)
+	
+        self.add(vbox)
+        self.set_default_size(400, 600)
+
+	return 
+
+    def search_lyrics(self, widget):
+	artist = self.txtArtist.get_text()
+	title = self.txtTitle.get_text()
+
+	self.grab_lyrics_by_ar_ti(artist, title)
+    
     def show_lyrics(self, entry, shell):
 	db = shell.props.db
 	title = db.entry_get(entry, rhythmdb.PROP_TITLE)
 	artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         self.set_title(title + " - " + artist + " - Lyrics")
+	self.txtArtist.set_text(artist)
+	self.txtTitle.set_text(title)
+
+	self.grab_lyrics_by_ar_ti(artist, title)
 	
+    def grab_lyrics_by_ar_ti(self, artist, title):
         self.buffer.set_text(_("Searching for lyrics..."))
-	self.lyrics_grabber.get_lyrics(db, entry, self.buffer.set_text)
+	self.lyrics_grabber.get_lyrics(artist, title, self.buffer.set_text)
+	
 
 class TTPLyricGrabber(object):
     def __init__(self):
@@ -108,10 +142,8 @@ class TTPLyricGrabber(object):
 
 	return artist_folder + '/' + title[:128].encode(locale.getdefaultlocale()[1]) + '.lyric'
 
-    def get_lyrics(self, db, entry, callback):
+    def get_lyrics(self, artist, title, callback):
 	self.callback = callback
-        artist = db.entry_get(entry, rhythmdb.PROP_ARTIST).lower()
-        title = db.entry_get(entry, rhythmdb.PROP_TITLE).lower()
 
 	# replace ampersands and the like
 	for exp in LYRIC_ARTIST_REPLACE:
