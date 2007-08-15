@@ -45,7 +45,7 @@ LYRIC_ARTIST_REPLACE=[("/", "-"), (" & ", " and ")]
 
 MAX_RETRY = 5
 
-class TTPLyricWindow(gtk.Window):
+class TTPLyricsWindow(gtk.Window):
     def __init__(self, parent):
         gtk.Window.__init__(self)
 	
@@ -88,7 +88,8 @@ class TTPLyricWindow(gtk.Window):
 	vbox.pack_start(sw, expand=True)
 	
         bbox = gtk.HBox()
-        #bbox.set_layout(gtk.BUTTONBOX_END)
+
+	#bbox.set_layout(gtk.BUTTONBOX_END)
 	bbox.pack_start(lblArtist, expand=False)
 	bbox.pack_start(self.txtArtist, expand=False)
 	bbox.pack_end(btnSearch, expand=False)
@@ -102,6 +103,7 @@ class TTPLyricWindow(gtk.Window):
         vbox.pack_start(bbox1, expand=False)
 	
         self.add(vbox)
+	self.set_focus_chain([view, self.txtArtist, self.txtTitle, btnSearch, btnClose])
         self.set_default_size(400, 600)
 
 	return 
@@ -109,6 +111,7 @@ class TTPLyricWindow(gtk.Window):
     def search_lyrics(self, widget):
 	artist = self.txtArtist.get_text()
 	title = self.txtTitle.get_text()
+        self.set_title(title + " - " + artist + " - Lyrics")
 
 	self.grab_lyrics_by_ar_ti(artist, title)
     
@@ -116,11 +119,10 @@ class TTPLyricWindow(gtk.Window):
 	db = shell.props.db
 	title = db.entry_get(entry, rhythmdb.PROP_TITLE)
 	artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
-        self.set_title(title + " - " + artist + " - Lyrics")
 	self.txtArtist.set_text(artist)
 	self.txtTitle.set_text(title)
 
-	self.grab_lyrics_by_ar_ti(artist, title)
+	self.search_lyrics(None)
 	
     def grab_lyrics_by_ar_ti(self, artist, title):
         self.buffer.set_text(_("Searching for lyrics..."))
@@ -136,11 +138,20 @@ class TTPLyricGrabber(object):
         if not os.path.exists (lyrics_folder):
             os.mkdir (lyrics_folder)
 
-	artist_folder = lyrics_folder + '/' + artist[:128].encode(locale.getdefaultlocale()[1])
+	try:
+	    artist_folder = lyrics_folder + '/' + artist[:128].encode(locale.getdefaultlocale()[1])
+	except UnicodeEncodeError:
+	    artist_folder = lyrics_folder + '/' + artist[:128]
+	    
 	if not os.path.exists (artist_folder):
 	    os.mkdir (artist_folder)
 
-	return artist_folder + '/' + title[:128].encode(locale.getdefaultlocale()[1]) + '.lyric'
+	try:
+	    title_filename = title[:128].encode(locale.getdefaultlocale()[1]) + '.lyric'
+	except UnicodeEncodeError:
+	    title_filename = title[:128] + '.lyric'
+
+	return artist_folder + '/' + title_filename
 
     def get_lyrics(self, artist, title, callback):
 	self.callback = callback
@@ -265,13 +276,16 @@ class TTPLyricsDisplayPlugin(rb.Plugin):
 	
 	if self.window is not None:
 	    self.window.destroy ()
+	    self.window = None
 	
     def playing_entry_changed (self, sp, entry, shell):
     	if entry is not None:
 	    self.show_song_lyrics(None, shell)
 
     def show_lyrics_window(self, action, shell):
-	self.window = TTPLyricWindow(shell.props.window)
+	if self.window is not None:
+	    self.window.destroy()
+	self.window = TTPLyricsWindow(shell.props.window)
 	self.window.show_all()
 	sp = shell.get_player ()
 	entry = sp.get_playing_entry ()

@@ -21,8 +21,20 @@
 import codecs
 
 class ttpClient(object):
+    '''
+    privide ttplayer specific function, such as encoding artist and title,
+    generate a Id code for server authorizition.
+    (see http://ttplyrics.googlecode.com/svn/trunk/crack) 
+    '''
     @staticmethod
     def CodeFunc(Id, data):
+	'''
+	Generate a Id Code
+	These code may be ugly coz it is translated
+	from C code which is translated from asm code
+	grabed by ollydbg from ttp_lrcs.dll.
+	(see http://ttplyrics.googlecode.com/svn/trunk/crack) 
+	'''
 	length = len(data)
 
 	tmp2=0
