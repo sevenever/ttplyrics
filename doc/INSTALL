@@ -1,0 +1,10 @@
+INSTALL:
+copy directory ttplyrics to your ~/.gnome2/rhythmbox/plugins/
+
+ACTIVE:
+rhythmbox menu-->edit-->plugins-->enable ttplyrics
+
+USE:
+rhythmbox menu-->view-->TTPlyrics
+
+for more info, view http://code.google.com/p/ttplyrics/wiki/INSTALL
